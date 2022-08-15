@@ -10,7 +10,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.upsvh.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -21,11 +21,28 @@ async function run() {
         await client.connect();
         const entryCollections = client.db("redpositive").collection("entry");
 
-        app.post('/userEntry', async (req, res) => {
+        //Post User Entry
+        app.post('/users', async (req, res) => {
             const newEntry = req.body
             const addEntry = await entryCollections.insertOne(newEntry);
             res.send(addEntry);
-        })
+        });
+
+        //Get All Data
+        app.use('/users', async (req, res) => {
+            const query = {};
+            const cursor = entryCollections.find(query);
+            const users = await cursor.toArray();
+            res.send(users);
+        });
+
+        //Delete Data
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const deleteItem = await entryCollections.deleteOne(query);
+            res.send(deleteItem);
+        });
 
 
 
